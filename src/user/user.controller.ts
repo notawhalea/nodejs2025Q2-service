@@ -1,30 +1,29 @@
 import {
-    Controller,
-    Get,
-    Post,
+    BadRequestException,
     Body,
+    Controller,
+    Delete,
+    ForbiddenException,
+    Get,
+    HttpCode,
+    NotFoundException,
     Param,
     ParseUUIDPipe,
-    Delete,
-    BadRequestException,
-    HttpCode,
+    Post,
     Put,
-    NotFoundException,
-    ForbiddenException,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto, ReturnUser, UpdatePasswordDto } from './user.interface';
+import {UserService} from './user.service';
+import {CreateUserDto, ReturnUser, UpdatePasswordDto} from './user.interface';
 
 @Controller('user')
-export class UserConroller {
+export class UserController {
     constructor(private readonly userService: UserService) {}
 
     @Get()
     getAllUsers(): ReturnUser[] {
-        const processedUsers = this.userService
+        return this.userService
             .getAll()
             .map((user) => this.userService.getPublicInfo(user));
-        return processedUsers;
     }
 
     @Get(':id')
@@ -41,15 +40,13 @@ export class UserConroller {
     ): ReturnUser {
         const user = this.userService.getById(id);
         if (!user) throw new NotFoundException(`User with ID ${id} was not found`);
-        const publicUserInfo = this.userService.getPublicInfo(user);
-        return publicUserInfo;
+        return this.userService.getPublicInfo(user);
     }
 
     @Post()
     createUser(@Body() createUserDto: CreateUserDto) {
         const newUser = this.userService.create(createUserDto);
-        const publicUserInfo = this.userService.getPublicInfo(newUser);
-        return publicUserInfo;
+        return this.userService.getPublicInfo(newUser);
     }
 
     @Delete(':id')
@@ -97,7 +94,6 @@ export class UserConroller {
                 `Password should have at least 6 characters`,
             );
         const updatedUser = this.userService.update({ ...updatePasswordDto, id });
-        const publicUserInfo = this.userService.getPublicInfo(updatedUser);
-        return publicUserInfo;
+        return this.userService.getPublicInfo(updatedUser);
     }
 }
