@@ -1,16 +1,31 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Album, AlbumDto } from './album.interface';
+import { Album, AlbumDto, PublicAlbum } from './album.interface';
 import { randomUUID } from 'crypto';
 import { ArtistService } from 'src/artist/artist.service';
+import { TrackService } from "../track/track.service";
+import { FavoritesService } from "../favorite/favorite.service";
 
 @Injectable()
 export class AlbumService {
     constructor(
         @Inject(forwardRef(() => ArtistService))
         private readonly artistService: ArtistService,
+        @Inject(forwardRef(() => TrackService))
+        private readonly trackService: TrackService,
+        @Inject(forwardRef(() => FavoritesService))
+        private readonly favouritesService: FavoritesService,
     ) {}
 
     private _albums: Album[] = [];
+
+    public getPublicInfo(album: Album): PublicAlbum {
+        const { name, year, artistId } = album;
+        return { name, year, artistId };
+    }
+
+    private getArtistsAlbums(artistId: string): Album[] {
+        return this._albums.filter((album) => album.artistId === artistId);
+    }
 
     public getAll(): Album[] {
         return this._albums;
@@ -18,10 +33,6 @@ export class AlbumService {
 
     public getById(id: string): Album {
         return this._albums.find((album) => album.id === id);
-    }
-
-    public getArtistsAlbums(artistId: string): Album[] {
-        return this._albums.filter((album) => album.artistId === artistId);
     }
 
     public create({ name, year, artistId }: AlbumDto): Album | null {
@@ -40,6 +51,8 @@ export class AlbumService {
     public delete(id: string): boolean {
         const album = this.getById(id);
         if (!album) return false;
+        this.trackService.deleteAlbumId(id);
+        this.favouritesService.deleteAlbum(id);
         this._albums = this._albums.filter((album) => album.id !== id);
         return true;
     }

@@ -6,13 +6,8 @@ import { User, CreateUserDto, ReturnUser, UpdateUserProps } from './user.interfa
 export class UserService {
     private _users: User[] = [];
 
-    public getPublicInfo({
-        id,
-        login,
-        version,
-        createdAt,
-        updatedAt,
-    }: User): ReturnUser {
+    public getPublicInfo(user: User): ReturnUser {
+        const { id, login, version, createdAt, updatedAt } = user;
         return { id, login, version, createdAt, updatedAt };
     }
 
